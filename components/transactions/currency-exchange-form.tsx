@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { createCurrencyExchange } from "@/actions/transaction-actions";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, ArrowDown, ArrowLeftRight } from "lucide-react";
+import { ArrowLeftRight } from "lucide-react";
+import { toast } from "sonner";
 
 interface Member {
   id: string;
@@ -29,8 +30,6 @@ export function CurrencyExchangeForm({ members, onMemberChange }: CurrencyExchan
   const [usdAmount, setUsdAmount] = useState("");
   const [penAmount, setPenAmount] = useState("");
   const [date, setDate] = useState(today);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const isUsdToPen = direction === "USD_TO_PEN";
@@ -51,8 +50,6 @@ export function CurrencyExchangeForm({ members, onMemberChange }: CurrencyExchan
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
-    setSuccess(null);
     setLoading(true);
 
     const result = await createCurrencyExchange({
@@ -64,15 +61,15 @@ export function CurrencyExchangeForm({ members, onMemberChange }: CurrencyExchan
     });
 
     if (result.error) {
-      setError(result.error);
+      toast.error(result.error);
     } else {
-      const memberName =
-        members.find((m) => m.id === memberId)?.alias ??
-        members.find((m) => m.id === memberId)?.name ?? "";
-      setSuccess(`Cambio registrado para ${memberName}`);
+      const memberName = memberId === "_self"
+        ? "mi cuenta"
+        : (members.find((m) => m.id === memberId)?.alias ||
+           members.find((m) => m.id === memberId)?.name || "");
+      toast.success(`Cambio registrado para ${memberName}`);
       setUsdAmount("");
       setPenAmount("");
-      setTimeout(() => setSuccess(null), 4000);
       router.refresh();
     }
     setLoading(false);
@@ -104,10 +101,11 @@ export function CurrencyExchangeForm({ members, onMemberChange }: CurrencyExchan
           }}
           className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         >
-          <option value="">Selecciona un miembro</option>
+          <option value="">Selecciona una cuenta</option>
+          <option value="_self">Mi cuenta personal</option>
           {members.map((m) => (
             <option key={m.id} value={m.id}>
-              {m.alias ?? m.name}
+              {m.alias || m.name}
             </option>
           ))}
         </select>
@@ -190,15 +188,6 @@ export function CurrencyExchangeForm({ members, onMemberChange }: CurrencyExchan
           className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
-
-      {success && (
-        <div className="flex items-center gap-2 rounded-md bg-green-50 border border-green-200 px-3 py-2.5">
-          <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
-          <p className="text-sm text-green-700">{success}</p>
-        </div>
-      )}
-
-      {error && <p className="text-sm text-destructive">{error}</p>}
 
       <Button type="submit" className="w-full" disabled={loading}>
         {loading ? "Registrando..." : "Registrar cambio"}

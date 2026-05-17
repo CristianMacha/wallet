@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { markLoanReturned } from "@/actions/loan-actions";
+import { toast } from "sonner";
 
 export function MarkReturnedButton({ loanId }: { loanId: string }) {
   const [loading, setLoading] = useState(false);
@@ -13,8 +14,9 @@ export function MarkReturnedButton({ loanId }: { loanId: string }) {
     setLoading(true);
     const result = await markLoanReturned(loanId);
     if (result.error) {
-      alert(result.error);
+      toast.error(result.error);
     } else {
+      toast.success("Préstamo marcado como devuelto");
       setDone(true);
     }
     setLoading(false);

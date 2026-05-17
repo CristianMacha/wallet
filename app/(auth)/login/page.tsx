@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -19,11 +20,21 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const credential = await signInWithEmailAndPassword(auth, email, password);
+
+      if (!credential.user.emailVerified) {
+        setError("Debes verificar tu correo antes de ingresar. Revisa tu bandeja de entrada.");
+        await auth.signOut();
+        return;
+      }
+
       const idToken = await credential.user.getIdToken();
       const res = await fetch("/api/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken }),
+        body: JSON.stringify({
+          idToken,
+          name: credential.user.displayName,
+        }),
       });
       if (!res.ok) {
         setError("No tienes acceso a esta aplicación");
@@ -49,9 +60,7 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium">
-              Correo electrónico
-            </label>
+            <label htmlFor="email" className="text-sm font-medium">Correo electrónico</label>
             <input
               id="email"
               type="email"
@@ -64,9 +73,7 @@ export default function LoginPage() {
             />
           </div>
           <div className="space-y-2">
-            <label htmlFor="password" className="text-sm font-medium">
-              Contraseña
-            </label>
+            <label htmlFor="password" className="text-sm font-medium">Contraseña</label>
             <input
               id="password"
               type="password"
@@ -85,6 +92,13 @@ export default function LoginPage() {
             {loading ? "Ingresando..." : "Ingresar"}
           </Button>
         </form>
+
+        <p className="text-center text-sm text-muted-foreground">
+          ¿No tienes cuenta?{" "}
+          <Link href="/registro" className="text-foreground hover:underline font-medium">
+            Regístrate
+          </Link>
+        </p>
       </div>
     </div>
   );

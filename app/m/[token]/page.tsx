@@ -7,20 +7,29 @@ import { es } from "date-fns/locale";
 import { ArrowDownCircle, ArrowUpCircle } from "lucide-react";
 
 async function getMemberByToken(token: string) {
-  const snap = await adminDb
-    .collection("members")
-    .where("accessToken", "==", token)
-    .where("isActive", "==", true)
-    .limit(1)
-    .get();
+  // Busca en todos los usuarios el miembro con este accessToken
+  const usersSnap = await adminDb.collection("users").get();
 
-  if (snap.empty) return null;
-  const doc = snap.docs[0];
-  return {
-    id: doc.id,
-    name: doc.data().name as string,
-    alias: (doc.data().alias as string) ?? null,
-  };
+  for (const userDoc of usersSnap.docs) {
+    const snap = await adminDb
+      .collection("users").doc(userDoc.id)
+      .collection("members")
+      .where("accessToken", "==", token)
+      .where("isActive", "==", true)
+      .limit(1)
+      .get();
+
+    if (!snap.empty) {
+      const doc = snap.docs[0];
+      return {
+        userId: userDoc.id,
+        id: doc.id,
+        name: doc.data().name as string,
+        alias: (doc.data().alias as string) ?? null,
+      };
+    }
+  }
+  return null;
 }
 
 export default async function MemberViewPage({
@@ -45,8 +54,8 @@ export default async function MemberViewPage({
   }
 
   const [balance, transactions] = await Promise.all([
-    getMemberBalance(member.id),
-    getTransactions({ memberId: member.id }),
+    getMemberBalance(member.userId, member.id),
+    getTransactions(member.userId, { memberId: member.id }),
   ]);
 
   return (
@@ -57,7 +66,6 @@ export default async function MemberViewPage({
       </header>
 
       <main className="px-4 py-6 max-w-lg mx-auto space-y-4">
-        {/* Saldos */}
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-lg border border-border bg-card p-4">
             <p className="text-xs text-muted-foreground mb-1">Soles</p>
@@ -73,8 +81,7 @@ export default async function MemberViewPage({
           </div>
         </div>
 
-        {/* Historial */}
-        {transactions.length > 0 && (
+        {transactions.length > 0 ? (
           <section className="space-y-2">
             <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
               Movimientos
@@ -92,7 +99,7 @@ export default async function MemberViewPage({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline justify-between gap-2">
                       <p className="text-sm font-medium truncate">
-                        {tx.description ?? (tx.type === "DEPOSIT" ? "Depósito" : "Gasto")}
+                        {tx.description || (tx.type === "DEPOSIT" ? "Depósito" : "Gasto")}
                       </p>
                       <p className={`text-sm font-semibold tabular-nums shrink-0 ${tx.type === "DEPOSIT" ? "text-green-600" : "text-destructive"}`}>
                         {tx.type === "DEPOSIT" ? "+" : "-"}{formatCurrency(tx.amount, tx.currency)}
@@ -106,9 +113,7 @@ export default async function MemberViewPage({
               ))}
             </div>
           </section>
-        )}
-
-        {transactions.length === 0 && (
+        ) : (
           <p className="text-center text-muted-foreground text-sm py-4">
             Aún no hay movimientos registrados.
           </p>

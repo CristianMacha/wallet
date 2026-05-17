@@ -2,10 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { adminDb } from "@/lib/firebase-admin";
+import { getCurrentUserId } from "@/lib/session";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 
 interface CreateLoanData {
-  lenderMemberId: string;
+  lenderMemberId: string; // "_self" = cuenta propia del usuario
   borrowerType: "MEMBER" | "EXTERNAL";
   borrowerMemberId?: string;
   borrowerName: string;
@@ -16,24 +17,31 @@ interface CreateLoanData {
 }
 
 export async function createLoan(data: CreateLoanData) {
-  if (!data.lenderMemberId) return { error: "Selecciona el miembro que presta" };
+  const userId = await getCurrentUserId();
+  if (!data.lenderMemberId) return { error: "Selecciona quien presta" };
   if (!data.borrowerName?.trim()) return { error: "Ingresa el nombre de quien recibe" };
   if (!data.amount || data.amount <= 0) return { error: "El monto debe ser mayor a 0" };
   if (!data.date) return { error: "La fecha es obligatoria" };
   if (data.borrowerType === "MEMBER" && !data.borrowerMemberId) return { error: "Selecciona el miembro que recibe" };
   if (data.borrowerType === "MEMBER" && data.borrowerMemberId === data.lenderMemberId) return { error: "El prestamista y el receptor no pueden ser el mismo" };
 
-  const lenderDoc = await adminDb.collection("members").doc(data.lenderMemberId).get();
-  const lenderData = lenderDoc.data();
-  const lenderName = (lenderData?.alias as string) ?? (lenderData?.name as string) ?? "";
+  const userRef = adminDb.collection("users").doc(userId);
+
+  let lenderName: string;
+  if (data.lenderMemberId === "_self") {
+    const userDoc = await adminDb.collection("users").doc(userId).get();
+    lenderName = (userDoc.data()?.name as string) ?? "Yo";
+  } else {
+    const lenderDoc = await userRef.collection("members").doc(data.lenderMemberId).get();
+    lenderName = (lenderDoc.data()?.alias as string) ?? (lenderDoc.data()?.name as string) ?? "";
+  }
 
   const dateTs = Timestamp.fromDate(new Date(data.date));
   const batch = adminDb.batch();
 
-  // Crear el préstamo
-  const loanRef = adminDb.collection("loans").doc();
+  const loanRef = userRef.collection("loans").doc();
   batch.set(loanRef, {
-    lenderMemberId: data.lenderMemberId,
+    lenderMemberId: data.lenderMemberId === "_self" ? null : data.lenderMemberId,
     lenderName,
     borrowerType: data.borrowerType,
     borrowerMemberId: data.borrowerMemberId ?? null,
@@ -51,7 +59,10 @@ export async function createLoan(data: CreateLoanData) {
     : `Préstamo a ${data.borrowerName.trim()}`;
 
   // EXPENSE del que presta
-  const lenderTxRef = adminDb.collection("members").doc(data.lenderMemberId).collection("transactions").doc();
+  const lenderTxRef = data.lenderMemberId === "_self"
+    ? userRef.collection("transactions").doc()
+    : userRef.collection("members").doc(data.lenderMemberId).collection("transactions").doc();
+
   batch.set(lenderTxRef, {
     type: "EXPENSE",
     amount: data.amount,
@@ -65,13 +76,15 @@ export async function createLoan(data: CreateLoanData) {
 
   // Si es entre miembros: DEPOSIT del que recibe
   if (data.borrowerType === "MEMBER" && data.borrowerMemberId) {
-    const lenderShort = lenderData?.alias ?? lenderData?.name ?? "";
-    const borrowerTxRef = adminDb.collection("members").doc(data.borrowerMemberId).collection("transactions").doc();
+    const borrowerTxRef = data.borrowerMemberId === "_self"
+      ? userRef.collection("transactions").doc()
+      : userRef.collection("members").doc(data.borrowerMemberId).collection("transactions").doc();
+
     batch.set(borrowerTxRef, {
       type: "DEPOSIT",
       amount: data.amount,
       currency: data.currency,
-      description: `Préstamo recibido de ${lenderShort}${data.description?.trim() ? ` — ${data.description.trim()}` : ""}`,
+      description: `Préstamo recibido de ${lenderName}${data.description?.trim() ? ` — ${data.description.trim()}` : ""}`,
       date: dateTs,
       loanId: loanRef.id,
       createdAt: FieldValue.serverTimestamp(),
@@ -84,15 +97,52 @@ export async function createLoan(data: CreateLoanData) {
   revalidatePath("/dashboard");
   revalidatePath("/historial");
   revalidatePath("/prestamos");
-  revalidatePath(`/miembros/${data.lenderMemberId}`);
-  if (data.borrowerType === "MEMBER" && data.borrowerMemberId) {
-    revalidatePath(`/miembros/${data.borrowerMemberId}`);
-  }
   return { ok: true };
 }
 
+export async function deleteLoan(loanId: string) {
+  try {
+    const userId = await getCurrentUserId();
+    const userRef = adminDb.collection("users").doc(userId);
+    const loanDoc = await userRef.collection("loans").doc(loanId).get();
+    if (!loanDoc.exists) return { error: "Préstamo no encontrado" };
+
+    const loan = loanDoc.data()!;
+    const batch = adminDb.batch();
+
+    // Borrar transacciones del prestamista que tengan este loanId
+    const lenderCollection = loan.lenderMemberId === null
+      ? userRef.collection("transactions")
+      : userRef.collection("members").doc(loan.lenderMemberId).collection("transactions");
+    const lenderTxs = await lenderCollection.where("loanId", "==", loanId).get();
+    lenderTxs.docs.forEach((doc) => batch.delete(doc.ref));
+
+    // Borrar transacciones del receptor si era miembro
+    if (loan.borrowerType === "MEMBER" && loan.borrowerMemberId) {
+      const borrowerCollection = loan.borrowerMemberId === "_self"
+        ? userRef.collection("transactions")
+        : userRef.collection("members").doc(loan.borrowerMemberId).collection("transactions");
+      const borrowerTxs = await borrowerCollection.where("loanId", "==", loanId).get();
+      borrowerTxs.docs.forEach((doc) => batch.delete(doc.ref));
+    }
+
+    batch.delete(userRef.collection("loans").doc(loanId));
+    await batch.commit();
+
+    revalidatePath("/dashboard");
+    revalidatePath("/historial");
+    revalidatePath("/prestamos");
+    return { ok: true };
+  } catch (err) {
+    console.error("[deleteLoan] error:", err);
+    return { error: err instanceof Error ? err.message : "Error al eliminar el préstamo" };
+  }
+}
+
 export async function markLoanReturned(loanId: string) {
-  const loanDoc = await adminDb.collection("loans").doc(loanId).get();
+  const userId = await getCurrentUserId();
+  const userRef = adminDb.collection("users").doc(userId);
+  const loanDoc = await userRef.collection("loans").doc(loanId).get();
   if (!loanDoc.exists) return { error: "Préstamo no encontrado" };
 
   const loan = loanDoc.data()!;
@@ -101,16 +151,18 @@ export async function markLoanReturned(loanId: string) {
   const now = Timestamp.now();
   const batch = adminDb.batch();
 
-  // Marcar el préstamo como devuelto
-  batch.update(adminDb.collection("loans").doc(loanId), {
+  batch.update(userRef.collection("loans").doc(loanId), {
     status: "RETURNED",
     returnedAt: FieldValue.serverTimestamp(),
   });
 
   const description = `Devolución de préstamo — ${loan.borrowerName}`;
 
-  // DEPOSIT al que prestó (le devuelven el dinero)
-  const lenderTxRef = adminDb.collection("members").doc(loan.lenderMemberId).collection("transactions").doc();
+  // DEPOSIT al que prestó
+  const lenderTxRef = loan.lenderMemberId === null
+    ? userRef.collection("transactions").doc()
+    : userRef.collection("members").doc(loan.lenderMemberId).collection("transactions").doc();
+
   batch.set(lenderTxRef, {
     type: "DEPOSIT",
     amount: loan.amount,
@@ -122,15 +174,17 @@ export async function markLoanReturned(loanId: string) {
     updatedAt: FieldValue.serverTimestamp(),
   });
 
-  // Si era entre miembros: EXPENSE del que recibió (devuelve)
+  // Si era entre miembros: EXPENSE del que recibió
   if (loan.borrowerType === "MEMBER" && loan.borrowerMemberId) {
-    const lenderShort = loan.lenderName;
-    const borrowerTxRef = adminDb.collection("members").doc(loan.borrowerMemberId).collection("transactions").doc();
+    const borrowerTxRef = loan.borrowerMemberId === "_self"
+      ? userRef.collection("transactions").doc()
+      : userRef.collection("members").doc(loan.borrowerMemberId).collection("transactions").doc();
+
     batch.set(borrowerTxRef, {
       type: "EXPENSE",
       amount: loan.amount,
       currency: loan.currency,
-      description: `Devolución de préstamo a ${lenderShort}`,
+      description: `Devolución de préstamo a ${loan.lenderName}`,
       date: now,
       loanId,
       createdAt: FieldValue.serverTimestamp(),
@@ -143,9 +197,5 @@ export async function markLoanReturned(loanId: string) {
   revalidatePath("/dashboard");
   revalidatePath("/historial");
   revalidatePath("/prestamos");
-  revalidatePath(`/miembros/${loan.lenderMemberId}`);
-  if (loan.borrowerType === "MEMBER" && loan.borrowerMemberId) {
-    revalidatePath(`/miembros/${loan.borrowerMemberId}`);
-  }
   return { ok: true };
 }

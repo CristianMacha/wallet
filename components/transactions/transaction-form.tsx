@@ -7,7 +7,7 @@ import { useState } from "react";
 import { transactionSchema, type TransactionFormData } from "@/lib/validations/transaction";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
-import { CheckCircle2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface Member {
   id: string;
@@ -34,7 +34,6 @@ export function TransactionForm({
 }: TransactionFormProps) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const today = format(new Date(), "yyyy-MM-dd");
 
@@ -58,15 +57,14 @@ export function TransactionForm({
 
   async function submit(data: TransactionFormData) {
     setServerError(null);
-    setSuccessMessage(null);
     const result = await onSubmit(data);
     if (result.error) {
       setServerError(result.error);
+      toast.error(result.error);
     } else if (redirectOnSuccess) {
       router.push("/dashboard");
       router.refresh();
     } else {
-      // Mantener miembro, tipo, moneda y fecha — solo limpiar monto y descripción
       reset({
         memberId: data.memberId,
         type: data.type,
@@ -75,11 +73,12 @@ export function TransactionForm({
         amount: "" as unknown as number,
         description: "",
       });
-      const memberName = members.find((m) => m.id === data.memberId)?.alias ??
-        members.find((m) => m.id === data.memberId)?.name ?? "";
+      const memberName = data.memberId === "_self"
+        ? "mi cuenta"
+        : (members.find((m) => m.id === data.memberId)?.alias ||
+           members.find((m) => m.id === data.memberId)?.name || "");
       const typeLabel = data.type === "DEPOSIT" ? "Depósito" : "Gasto";
-      setSuccessMessage(`${typeLabel} registrado para ${memberName}`);
-      setTimeout(() => setSuccessMessage(null), 4000);
+      toast.success(`${typeLabel} registrado para ${memberName}`);
       router.refresh();
     }
   }
@@ -122,10 +121,11 @@ export function TransactionForm({
           }}
           className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         >
-          <option value="">Selecciona un miembro</option>
+          <option value="">Selecciona una cuenta</option>
+          <option value="_self">Mi cuenta personal</option>
           {members.map((m) => (
             <option key={m.id} value={m.id}>
-              {m.alias ?? m.name}
+              {m.alias || m.name}
             </option>
           ))}
         </select>
@@ -207,13 +207,6 @@ export function TransactionForm({
           <p className="text-xs text-destructive">{errors.description.message}</p>
         )}
       </div>
-
-      {successMessage && (
-        <div className="flex items-center gap-2 rounded-md bg-green-50 border border-green-200 px-3 py-2.5">
-          <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
-          <p className="text-sm text-green-700 flex-1">{successMessage}</p>
-        </div>
-      )}
 
       {serverError && <p className="text-sm text-destructive">{serverError}</p>}
 

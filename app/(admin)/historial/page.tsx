@@ -1,5 +1,6 @@
 import { adminDb } from "@/lib/firebase-admin";
-import { getTransactions } from "@/lib/transactions";
+import { getCurrentUserId } from "@/lib/session";
+import { getTransactions, getUserTransactions } from "@/lib/transactions";
 import { PageHeader } from "@/components/layout/page-header";
 import { TransactionItem } from "@/components/transactions/transaction-item";
 import { TransactionFilters } from "@/components/transactions/transaction-filters";
@@ -8,8 +9,9 @@ import { Suspense } from "react";
 
 const PAGE_SIZE = 30;
 
-async function getActiveMembers() {
+async function getActiveMembers(userId: string) {
   const snap = await adminDb
+    .collection("users").doc(userId)
     .collection("members")
     .where("isActive", "==", true)
     .get();
@@ -33,19 +35,39 @@ export default async function HistorialPage({
     page?: string;
   }>;
 }) {
+  const userId = await getCurrentUserId();
   const filters = await searchParams;
   const page = Math.max(1, parseInt(filters.page ?? "1"));
 
-  const [members, allTransactions] = await Promise.all([
-    getActiveMembers(),
-    getTransactions({
-      memberId: filters.memberId,
-      type: filters.type as "DEPOSIT" | "EXPENSE" | undefined,
-      currency: filters.currency as "PEN" | "USD" | undefined,
-      from: filters.from,
-      to: filters.to,
-    }),
+  const userDoc = await adminDb.collection("users").doc(userId).get();
+  const userName = (userDoc.data()?.name as string) ?? "Mi cuenta";
+
+  const txFilters = {
+    type: filters.type as "DEPOSIT" | "EXPENSE" | undefined,
+    currency: filters.currency as "PEN" | "USD" | undefined,
+    from: filters.from,
+    to: filters.to,
+  };
+
+  const isSelf = filters.memberId === "_self";
+  const hasMemberFilter = !!filters.memberId && !isSelf;
+
+  const [members, memberTxs, userTxs] = await Promise.all([
+    getActiveMembers(userId),
+    // Si filtra por "_self" no traer miembros, si no filtra traer todos
+    isSelf
+      ? Promise.resolve([])
+      : getTransactions(userId, { ...txFilters, memberId: hasMemberFilter ? filters.memberId : undefined }),
+    // Si filtra por un miembro específico no traer cuenta propia
+    hasMemberFilter
+      ? Promise.resolve([])
+      : getUserTransactions(userId, userName, txFilters),
   ]);
+
+  const allTransactions = [...userTxs, ...memberTxs].sort((a, b) => {
+    const diff = b.date.getTime() - a.date.getTime();
+    return diff !== 0 ? diff : b.createdAt.getTime() - a.createdAt.getTime();
+  });
 
   const filtered = filters.q
     ? allTransactions.filter((tx) =>
@@ -59,7 +81,6 @@ export default async function HistorialPage({
   return (
     <>
       <PageHeader title="Historial" />
-
       <div className="px-4 py-4 space-y-4">
         <Suspense>
           <TransactionFilters members={members} showMemberFilter />

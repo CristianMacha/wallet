@@ -93,10 +93,11 @@ export function TransactionFilters({ members = [], showMemberFilter = true }: Tr
             onChange={(e) => updateParam("memberId", e.target.value)}
             className="shrink-0 rounded-full border border-input bg-background px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
           >
-            <option value="">Todos los miembros</option>
+            <option value="">Todos</option>
+            <option value="_self">Mi cuenta</option>
             {members.map((m) => (
               <option key={m.id} value={m.id}>
-                {m.alias ?? m.name}
+                {m.alias || m.name}
               </option>
             ))}
           </select>

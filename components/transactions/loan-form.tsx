@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { createLoan } from "@/actions/loan-actions";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface Member {
   id: string;
@@ -32,16 +32,12 @@ export function LoanForm({ members, onMemberChange }: LoanFormProps) {
   const [currency, setCurrency] = useState<"PEN" | "USD">("PEN");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState(today);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const availableBorrowers = members.filter((m) => m.id !== lenderMemberId);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
-    setSuccess(null);
     setLoading(true);
 
     const selectedBorrower = borrowerType === "MEMBER"
@@ -53,7 +49,7 @@ export function LoanForm({ members, onMemberChange }: LoanFormProps) {
       borrowerType,
       borrowerMemberId: borrowerType === "MEMBER" ? borrowerMemberId : undefined,
       borrowerName: borrowerType === "MEMBER"
-        ? (selectedBorrower?.alias ?? selectedBorrower?.name ?? "")
+        ? (selectedBorrower?.alias || selectedBorrower?.name || "")
         : borrowerName,
       amount: parseFloat(amount),
       currency,
@@ -62,17 +58,16 @@ export function LoanForm({ members, onMemberChange }: LoanFormProps) {
     });
 
     if (result.error) {
-      setError(result.error);
+      toast.error(result.error);
     } else {
-      const lender = members.find((m) => m.id === lenderMemberId);
-      const lenderLabel = lender?.alias ?? lender?.name ?? "";
+      const lender = lenderMemberId === "_self" ? null : members.find((m) => m.id === lenderMemberId);
+      const lenderLabel = lenderMemberId === "_self" ? "Mi cuenta" : (lender?.alias || lender?.name || "");
       const borrowerLabel = borrowerType === "MEMBER"
-        ? (selectedBorrower?.alias ?? selectedBorrower?.name ?? "")
+        ? (selectedBorrower?.alias || selectedBorrower?.name || "")
         : borrowerName;
-      setSuccess(`Préstamo registrado: ${lenderLabel} → ${borrowerLabel}`);
+      toast.success(`Préstamo registrado: ${lenderLabel} → ${borrowerLabel}`);
       setAmount("");
       setDescription("");
-      setTimeout(() => setSuccess(null), 4000);
       router.refresh();
     }
     setLoading(false);
@@ -94,9 +89,10 @@ export function LoanForm({ members, onMemberChange }: LoanFormProps) {
           }}
           className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         >
-          <option value="">Selecciona un miembro</option>
+          <option value="">Selecciona una cuenta</option>
+          <option value="_self">Mi cuenta personal</option>
           {members.map((m) => (
-            <option key={m.id} value={m.id}>{m.alias ?? m.name}</option>
+            <option key={m.id} value={m.id}>{m.alias || m.name}</option>
           ))}
         </select>
       </div>
@@ -135,7 +131,7 @@ export function LoanForm({ members, onMemberChange }: LoanFormProps) {
           >
             <option value="">Selecciona un miembro</option>
             {availableBorrowers.map((m) => (
-              <option key={m.id} value={m.id}>{m.alias ?? m.name}</option>
+              <option key={m.id} value={m.id}>{m.alias || m.name}</option>
             ))}
           </select>
         </div>
@@ -214,14 +210,6 @@ export function LoanForm({ members, onMemberChange }: LoanFormProps) {
           className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
-
-      {success && (
-        <div className="flex items-center gap-2 rounded-md bg-green-50 border border-green-200 px-3 py-2.5">
-          <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
-          <p className="text-sm text-green-700">{success}</p>
-        </div>
-      )}
-      {error && <p className="text-sm text-destructive">{error}</p>}
 
       <Button type="submit" className="w-full" disabled={loading}>
         {loading ? "Registrando..." : "Registrar préstamo"}

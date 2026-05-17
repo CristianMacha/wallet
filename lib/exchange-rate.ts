@@ -7,8 +7,9 @@ export interface ExchangeRateResult {
   isToday: boolean;
 }
 
-export async function getLatestExchangeRate(): Promise<ExchangeRateResult | null> {
+export async function getLatestExchangeRate(userId: string): Promise<ExchangeRateResult | null> {
   const snap = await adminDb
+    .collection("users").doc(userId)
     .collection("exchangeRates")
     .orderBy("date", "desc")
     .limit(1)

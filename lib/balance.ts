@@ -5,44 +5,49 @@ export interface Balance {
   USD: number;
 }
 
-export async function getMemberBalance(memberId: string): Promise<Balance> {
-  const snap = await adminDb
-    .collection("members")
-    .doc(memberId)
-    .collection("transactions")
-    .get();
-
+function calcBalance(docs: FirebaseFirestore.QueryDocumentSnapshot[]): Balance {
   const balance: Balance = { PEN: 0, USD: 0 };
-
-  for (const doc of snap.docs) {
+  for (const doc of docs) {
     const { type, amount, currency } = doc.data() as {
       type: "DEPOSIT" | "EXPENSE";
       amount: number;
       currency: "PEN" | "USD";
     };
-    const delta = type === "DEPOSIT" ? amount : -amount;
-    balance[currency] = (balance[currency] ?? 0) + delta;
+    balance[currency] += type === "DEPOSIT" ? amount : -amount;
   }
-
   return balance;
 }
 
-export async function getAllMembersBalances(): Promise<
-  Record<string, Balance>
-> {
+export async function getMemberBalance(userId: string, memberId: string): Promise<Balance> {
+  const snap = await adminDb
+    .collection("users").doc(userId)
+    .collection("members").doc(memberId)
+    .collection("transactions")
+    .get();
+  return calcBalance(snap.docs);
+}
+
+export async function getUserBalance(userId: string): Promise<Balance> {
+  const snap = await adminDb
+    .collection("users").doc(userId)
+    .collection("transactions")
+    .get();
+  return calcBalance(snap.docs);
+}
+
+export async function getAllMembersBalances(userId: string): Promise<Record<string, Balance>> {
   const membersSnap = await adminDb
+    .collection("users").doc(userId)
     .collection("members")
     .where("isActive", "==", true)
     .get();
 
   const results: Record<string, Balance> = {};
-
   await Promise.all(
-    membersSnap.docs.map(async (memberDoc) => {
-      results[memberDoc.id] = await getMemberBalance(memberDoc.id);
+    membersSnap.docs.map(async (doc) => {
+      results[doc.id] = await getMemberBalance(userId, doc.id);
     })
   );
-
   return results;
 }
 

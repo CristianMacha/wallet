@@ -37,7 +37,7 @@ export function MemberBalanceCard({ id, name, alias, balance, pendingLoans = [] 
     >
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
-          <p className="text-sm font-medium truncate">{alias ?? name}</p>
+          <p className="text-sm font-medium truncate">{alias || name}</p>
           {isNegative && (
             <AlertTriangle className="h-3.5 w-3.5 text-destructive shrink-0" />
           )}

@@ -2,23 +2,22 @@
 
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
-import { deleteTransaction } from "@/actions/transaction-actions";
 import { Button } from "@/components/ui/button";
+import { deleteLoan } from "@/actions/loan-actions";
 import { toast } from "sonner";
 
-interface DeleteTransactionButtonProps {
-  memberId: string;
-  transactionId: string;
-}
-
-export function DeleteTransactionButton({ memberId, transactionId }: DeleteTransactionButtonProps) {
+export function DeleteLoanButton({ loanId }: { loanId: string }) {
   const [confirming, setConfirming] = useState(false);
   const [loading, setLoading] = useState(false);
 
   async function handleDelete() {
     setLoading(true);
-    await deleteTransaction(memberId, transactionId);
-    toast.success("Movimiento eliminado");
+    const result = await deleteLoan(loanId);
+    if (result.error) {
+      toast.error(result.error);
+    } else {
+      toast.success("Préstamo eliminado");
+    }
     setLoading(false);
     setConfirming(false);
   }
@@ -51,7 +50,7 @@ export function DeleteTransactionButton({ memberId, transactionId }: DeleteTrans
     <button
       onClick={() => setConfirming(true)}
       className="p-1.5 text-muted-foreground hover:text-destructive transition-colors"
-      aria-label="Eliminar"
+      aria-label="Eliminar préstamo"
     >
       <Trash2 className="h-3.5 w-3.5" />
     </button>

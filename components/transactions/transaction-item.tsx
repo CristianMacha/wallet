@@ -7,7 +7,7 @@ import { DeleteTransactionButton } from "./delete-transaction-button";
 
 interface TransactionItemProps {
   id: string;
-  memberId: string;
+  memberId: string | null;
   memberName: string;
   type: "DEPOSIT" | "EXPENSE";
   amount: number;
@@ -64,13 +64,13 @@ export function TransactionItem({
 
       <div className="flex items-center gap-1 shrink-0">
         <Link
-          href={`/transaction/${id}/edit?memberId=${memberId}`}
+          href={`/transaction/${id}/edit?memberId=${memberId ?? "_self"}`}
           className="p-1.5 text-muted-foreground hover:text-foreground transition-colors"
           aria-label="Editar"
         >
           <Pencil className="h-3.5 w-3.5" />
         </Link>
-        <DeleteTransactionButton memberId={memberId} transactionId={id} />
+        <DeleteTransactionButton memberId={memberId ?? "_self"} transactionId={id} />
       </div>
     </div>
   );

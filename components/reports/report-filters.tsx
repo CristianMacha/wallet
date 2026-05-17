@@ -10,9 +10,10 @@ interface Member {
 
 interface ReportFiltersProps {
   members: Member[];
+  showSelf?: boolean;
 }
 
-export function ReportFilters({ members }: ReportFiltersProps) {
+export function ReportFilters({ members, showSelf = true }: ReportFiltersProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -33,10 +34,11 @@ export function ReportFilters({ members }: ReportFiltersProps) {
       onChange={(e) => update("memberId", e.target.value)}
       className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
     >
-      <option value="">Todos los miembros</option>
+      <option value="">Todos</option>
+      {showSelf && <option value="_self">Mi cuenta</option>}
       {members.map((m) => (
         <option key={m.id} value={m.id}>
-          {m.alias ?? m.name}
+          {m.alias || m.name}
         </option>
       ))}
     </select>

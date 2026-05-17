@@ -1,13 +1,16 @@
+import { getCurrentUserId } from "@/lib/session";
 import { getAllLoans } from "@/lib/loans";
 import { PageHeader } from "@/components/layout/page-header";
 import { MarkReturnedButton } from "@/components/loans/mark-returned-button";
+import { DeleteLoanButton } from "@/components/loans/delete-loan-button";
 import { formatCurrency } from "@/lib/format";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Clock, CheckCircle2 } from "lucide-react";
 
 export default async function PrestamosPage() {
-  const loans = await getAllLoans();
+  const userId = await getCurrentUserId();
+  const loans = await getAllLoans(userId);
 
   const pending = loans.filter((l) => l.status === "PENDING");
   const returned = loans.filter((l) => l.status === "RETURNED");
@@ -22,7 +25,6 @@ export default async function PrestamosPage() {
           </p>
         ) : (
           <>
-            {/* Pendientes */}
             {pending.length > 0 && (
               <section className="space-y-2">
                 <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
@@ -47,9 +49,12 @@ export default async function PrestamosPage() {
                             )}
                           </p>
                         </div>
-                        <p className="text-sm font-semibold text-amber-600 dark:text-amber-400 tabular-nums shrink-0">
-                          {formatCurrency(loan.amount, loan.currency)}
-                        </p>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <p className="text-sm font-semibold text-amber-600 dark:text-amber-400 tabular-nums">
+                            {formatCurrency(loan.amount, loan.currency)}
+                          </p>
+                          <DeleteLoanButton loanId={loan.id} />
+                        </div>
                       </div>
                       <MarkReturnedButton loanId={loan.id} />
                     </div>
@@ -58,7 +63,6 @@ export default async function PrestamosPage() {
               </section>
             )}
 
-            {/* Devueltos */}
             {returned.length > 0 && (
               <section className="space-y-2">
                 <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
@@ -70,9 +74,7 @@ export default async function PrestamosPage() {
                     <div key={loan.id} className="px-4 py-3 opacity-60">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium">
-                            {loan.lenderName} → {loan.borrowerName}
-                          </p>
+                          <p className="text-sm font-medium">{loan.lenderName} → {loan.borrowerName}</p>
                           {loan.description && (
                             <p className="text-xs text-muted-foreground truncate">{loan.description}</p>
                           )}

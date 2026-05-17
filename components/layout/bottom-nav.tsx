@@ -12,7 +12,6 @@ const navItems = [
   { href: "/historial", label: "Historial", icon: Clock },
   { href: "/transaction/new", label: "Nuevo", icon: PlusCircle, highlight: true },
   { href: "/miembros", label: "Miembros", icon: Users },
-  { href: "/reportes", label: "Reportes", icon: BarChart2 },
 ];
 
 export function BottomNav() {
@@ -56,6 +55,14 @@ export function BottomNav() {
             >
               <Landmark className="h-4 w-4 text-muted-foreground" />
               <span>Préstamos</span>
+            </Link>
+            <Link
+              href="/reportes"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 w-full px-4 py-3.5 text-sm text-left hover:bg-muted/50 transition-colors border-b border-border"
+            >
+              <BarChart2 className="h-4 w-4 text-muted-foreground" />
+              <span>Reportes</span>
             </Link>
             <button
               onClick={() => { toggle(); setOpen(false); }}

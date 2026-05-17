@@ -1,12 +1,14 @@
 import { notFound } from "next/navigation";
 import { adminDb } from "@/lib/firebase-admin";
+import { getCurrentUserId } from "@/lib/session";
 import { PageHeader } from "@/components/layout/page-header";
 import { EditTransactionForm } from "@/components/transactions/edit-transaction-form";
 import { format } from "date-fns";
 import { Timestamp } from "firebase-admin/firestore";
 
-async function getActiveMembers() {
+async function getActiveMembers(userId: string) {
   const snap = await adminDb
+    .collection("users").doc(userId)
     .collection("members")
     .where("isActive", "==", true)
     .orderBy("createdAt")
@@ -18,13 +20,13 @@ async function getActiveMembers() {
   }));
 }
 
-async function getTransaction(memberId: string, transactionId: string) {
-  const doc = await adminDb
-    .collection("members")
-    .doc(memberId)
-    .collection("transactions")
-    .doc(transactionId)
-    .get();
+async function getTransaction(userId: string, memberId: string, transactionId: string) {
+  const userRef = adminDb.collection("users").doc(userId);
+  const txRef = memberId === "_self"
+    ? userRef.collection("transactions").doc(transactionId)
+    : userRef.collection("members").doc(memberId).collection("transactions").doc(transactionId);
+
+  const doc = await txRef.get();
   if (!doc.exists) return null;
   const data = doc.data()!;
   return {
@@ -45,14 +47,15 @@ export default async function EditTransactionPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ memberId?: string }>;
 }) {
+  const userId = await getCurrentUserId();
   const { id } = await params;
   const { memberId } = await searchParams;
 
   if (!memberId) notFound();
 
   const [members, transaction] = await Promise.all([
-    getActiveMembers(),
-    getTransaction(memberId, id),
+    getActiveMembers(userId),
+    getTransaction(userId, memberId, id),
   ]);
 
   if (!transaction) notFound();

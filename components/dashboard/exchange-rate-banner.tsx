@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { saveExchangeRate } from "@/actions/exchange-rate-actions";
 import { Pencil, Check, X } from "lucide-react";
+import { toast } from "sonner";
 
 interface ExchangeRateBannerProps {
   rate: number | null;
@@ -30,10 +31,12 @@ export function ExchangeRateBanner({ rate: initialRate, date, isToday }: Exchang
     const result = await saveExchangeRate({ rate: num });
     if (result.error) {
       setError(result.error);
+      toast.error(result.error);
     } else {
       setRate(num);
       setEditing(false);
       setValue("");
+      toast.success("Tipo de cambio guardado");
     }
     setLoading(false);
   }

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { adminDb } from "@/lib/firebase-admin";
+import { getCurrentUserId } from "@/lib/session";
 import { getMemberBalance } from "@/lib/balance";
 import { getTransactions } from "@/lib/transactions";
 import { PageHeader } from "@/components/layout/page-header";
@@ -18,8 +19,11 @@ interface Member {
   isActive: boolean;
 }
 
-async function getMember(id: string): Promise<Member | null> {
-  const doc = await adminDb.collection("members").doc(id).get();
+async function getMember(userId: string, id: string): Promise<Member | null> {
+  const doc = await adminDb
+    .collection("users").doc(userId)
+    .collection("members").doc(id)
+    .get();
   if (!doc.exists) return null;
   const data = doc.data()!;
   return {
@@ -37,11 +41,13 @@ export default async function MemberProfilePage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const userId = await getCurrentUserId();
   const { id } = await params;
+
   const [member, balance, transactions] = await Promise.all([
-    getMember(id),
-    getMemberBalance(id),
-    getTransactions({ memberId: id }),
+    getMember(userId, id),
+    getMemberBalance(userId, id),
+    getTransactions(userId, { memberId: id }),
   ]);
 
   if (!member) notFound();
@@ -49,29 +55,20 @@ export default async function MemberProfilePage({
   return (
     <>
       <PageHeader title={member.name} backHref="/miembros" />
-
       <div className="px-4 py-4 space-y-6">
-        {/* Saldo */}
         <section className="space-y-2">
-          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            Saldo actual
-          </h2>
+          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Saldo actual</h2>
           <div className="rounded-lg border border-border bg-card p-4 space-y-3">
             <BalanceDisplay balance={balance} size="lg" />
             {member.note && (
-              <p className="text-sm text-muted-foreground border-t border-border pt-3">
-                {member.note}
-              </p>
+              <p className="text-sm text-muted-foreground border-t border-border pt-3">{member.note}</p>
             )}
           </div>
         </section>
 
-        {/* Historial */}
         {transactions.length > 0 && (
           <section className="space-y-2">
-            <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Movimientos recientes
-            </h2>
+            <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Movimientos recientes</h2>
             <div className="rounded-lg border border-border bg-card divide-y divide-border overflow-hidden">
               {transactions.slice(0, 20).map((tx) => (
                 <TransactionItem key={tx.id} {...tx} showMember={false} />
@@ -79,10 +76,9 @@ export default async function MemberProfilePage({
             </div>
           </section>
         )}
+
         <section className="space-y-2">
-          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            Editar datos
-          </h2>
+          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Editar datos</h2>
           <div className="rounded-lg border border-border bg-card overflow-hidden">
             <EditMemberForm
               memberId={member.id}
@@ -92,18 +88,14 @@ export default async function MemberProfilePage({
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            Enlace de acceso
-          </h2>
+          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Enlace de acceso</h2>
           <div className="rounded-lg border border-border bg-card p-4">
             <MemberLinkPanel memberId={member.id} accessToken={member.accessToken} />
           </div>
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            Estado del miembro
-          </h2>
+          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Estado del miembro</h2>
           <div className="rounded-lg border border-border bg-card p-4">
             <ToggleActiveButton memberId={member.id} isActive={member.isActive} />
           </div>

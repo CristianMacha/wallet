@@ -1,4 +1,5 @@
 import { adminDb } from "@/lib/firebase-admin";
+import { getCurrentUserId } from "@/lib/session";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -11,8 +12,12 @@ interface Member {
   isActive: boolean;
 }
 
-async function getMembers(): Promise<Member[]> {
-  const snap = await adminDb.collection("members").orderBy("createdAt").get();
+async function getMembers(userId: string): Promise<Member[]> {
+  const snap = await adminDb
+    .collection("users").doc(userId)
+    .collection("members")
+    .orderBy("createdAt")
+    .get();
   return snap.docs.map((doc) => ({
     id: doc.id,
     name: doc.data().name,
@@ -22,7 +27,8 @@ async function getMembers(): Promise<Member[]> {
 }
 
 export default async function MiembrosPage() {
-  const members = await getMembers();
+  const userId = await getCurrentUserId();
+  const members = await getMembers(userId);
   const active = members.filter((m) => m.isActive);
   const inactive = members.filter((m) => !m.isActive);
 
