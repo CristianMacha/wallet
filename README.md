@@ -16,15 +16,15 @@ Aplicación web para gestionar dinero en custodia entre miembros de una familia.
 
 ## Stack
 
-| Capa | Tecnología |
-|---|---|
-| Framework | Next.js 16 (App Router) |
-| UI | React 19 + Tailwind CSS 4 + shadcn/ui |
-| Base de datos | Firebase Firestore |
-| Autenticación | Firebase Auth (email/password) |
-| Mutaciones | Server Actions |
-| Validación | zod v3 + react-hook-form |
-| Hosting | Vercel |
+| Capa          | Tecnología                            |
+| ------------- | ------------------------------------- |
+| Framework     | Next.js 16 (App Router)               |
+| UI            | React 19 + Tailwind CSS 4 + shadcn/ui |
+| Base de datos | Firebase Firestore                    |
+| Autenticación | Firebase Auth (email/password)        |
+| Mutaciones    | Server Actions                        |
+| Validación    | zod v3 + react-hook-form              |
+| Hosting       | Vercel                                |
 
 ## Requisitos previos
 
@@ -43,9 +43,6 @@ pnpm install
 Crea un archivo `.env.local` en la raíz con las siguientes variables:
 
 ```env
-# Email del administrador — único usuario con acceso al panel admin
-ADMIN_EMAIL=tu@correo.com
-
 # Firebase cliente (se exponen al browser, van con NEXT_PUBLIC_)
 NEXT_PUBLIC_FIREBASE_API_KEY=
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
@@ -61,6 +58,7 @@ FIREBASE_PRIVATE_KEY=
 ```
 
 Las credenciales de Firebase las encuentras en:
+
 - **Cliente** → Firebase Console → Configuración del proyecto → Tus apps → SDK de Firebase
 - **Admin** → Firebase Console → Configuración del proyecto → Cuentas de servicio → Generar nueva clave privada
 
@@ -84,11 +82,11 @@ La app estará disponible en `http://localhost:3000`.
 
 La app necesita índices compuestos. Firestore los solicita automáticamente con un enlace en la consola la primera vez que se ejecuta cada consulta:
 
-| Colección | Campos |
-|---|---|
-| `members` | `isActive ASC`, `createdAt ASC` |
-| `members/{id}/transactions` | `date DESC`, `createdAt DESC` |
-| `members/{id}/transactions` | `type ASC`, `date DESC`, `createdAt DESC` |
+| Colección                   | Campos                                        |
+| --------------------------- | --------------------------------------------- |
+| `members`                   | `isActive ASC`, `createdAt ASC`               |
+| `members/{id}/transactions` | `date DESC`, `createdAt DESC`                 |
+| `members/{id}/transactions` | `type ASC`, `date DESC`, `createdAt DESC`     |
 | `members/{id}/transactions` | `currency ASC`, `date DESC`, `createdAt DESC` |
 
 ## Estructura del proyecto
