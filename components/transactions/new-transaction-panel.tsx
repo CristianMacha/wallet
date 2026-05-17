@@ -1,0 +1,74 @@
+"use client";
+
+import { useState } from "react";
+import { TransactionForm } from "./transaction-form";
+import { CurrencyExchangeForm } from "./currency-exchange-form";
+import { LoanForm } from "./loan-form";
+import { TodayTransactions } from "./today-transactions";
+import { createTransaction } from "@/actions/transaction-actions";
+import type { Transaction } from "@/lib/transactions";
+
+interface Member {
+  id: string;
+  name: string;
+  alias: string | null;
+}
+
+type Mode = "DEPOSIT" | "EXPENSE" | "EXCHANGE" | "LOAN";
+
+const MODES: { value: Mode; label: string }[] = [
+  { value: "DEPOSIT", label: "Depósito" },
+  { value: "EXPENSE", label: "Gasto" },
+  { value: "EXCHANGE", label: "Cambio" },
+  { value: "LOAN", label: "Préstamo" },
+];
+
+interface NewTransactionPanelProps {
+  members: Member[];
+  todayTransactions: Transaction[];
+}
+
+export function NewTransactionPanel({ members, todayTransactions }: NewTransactionPanelProps) {
+  const [mode, setMode] = useState<Mode>("DEPOSIT");
+  const [selectedMemberId, setSelectedMemberId] = useState<string>("");
+
+  return (
+    <>
+      {/* Selector de modo */}
+      <div className="px-4 pt-4">
+        <div className="grid grid-cols-4 gap-1 rounded-lg border border-border bg-muted p-1">
+          {MODES.map(({ value, label }) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setMode(value)}
+              className={`rounded-md px-1 py-2 text-xs font-medium transition-colors ${
+                mode === value
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {mode === "EXCHANGE" ? (
+        <CurrencyExchangeForm members={members} onMemberChange={setSelectedMemberId} />
+      ) : mode === "LOAN" ? (
+        <LoanForm members={members} onMemberChange={setSelectedMemberId} />
+      ) : (
+        <TransactionForm
+          members={members}
+          onSubmit={createTransaction}
+          submitLabel="Registrar movimiento"
+          onMemberChange={setSelectedMemberId}
+          defaultValues={{ type: mode }}
+        />
+      )}
+
+      <TodayTransactions transactions={todayTransactions} memberId={selectedMemberId} />
+    </>
+  );
+}
