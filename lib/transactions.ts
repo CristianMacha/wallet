@@ -71,7 +71,8 @@ export async function getTransactions(
   // Si se filtra por un miembro específico, solo esa subcolección
   if (filters.memberId) {
     const memberDoc = await userRef.collection("members").doc(filters.memberId).get();
-    const memberName = (memberDoc.data()?.alias as string) ?? (memberDoc.data()?.name as string) ?? "";
+    const d = memberDoc.data();
+    const memberName = d?.alias ? `${d.name} - ${d.alias}` : (d?.name as string) ?? "";
     const docs = await queryTransactions(
       userRef.collection("members").doc(filters.memberId).collection("transactions"),
       filters
@@ -82,7 +83,8 @@ export async function getTransactions(
     const membersSnap = await userRef.collection("members").where("isActive", "==", true).get();
     await Promise.all(
       membersSnap.docs.map(async (memberDoc) => {
-        const memberName = (memberDoc.data().alias as string) ?? (memberDoc.data().name as string);
+        const md = memberDoc.data();
+        const memberName = md.alias ? `${md.name} - ${md.alias}` : (md.name as string);
         const docs = await queryTransactions(
           userRef.collection("members").doc(memberDoc.id).collection("transactions"),
           filters

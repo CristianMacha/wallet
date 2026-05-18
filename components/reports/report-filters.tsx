@@ -38,7 +38,7 @@ export function ReportFilters({ members, showSelf = true }: ReportFiltersProps) 
       {showSelf && <option value="_self">Mi cuenta</option>}
       {members.map((m) => (
         <option key={m.id} value={m.id}>
-          {m.alias || m.name}
+          {m.alias ? `${m.name} - ${m.alias}` : m.name}
         </option>
       ))}
     </select>

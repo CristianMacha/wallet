@@ -14,11 +14,10 @@ interface Member {
   alias: string | null;
 }
 
-type Mode = "DEPOSIT" | "EXPENSE" | "EXCHANGE" | "LOAN";
+type Mode = "TRANSACTION" | "EXCHANGE" | "LOAN";
 
 const MODES: { value: Mode; label: string }[] = [
-  { value: "DEPOSIT", label: "Depósito" },
-  { value: "EXPENSE", label: "Gasto" },
+  { value: "TRANSACTION", label: "Movimiento" },
   { value: "EXCHANGE", label: "Cambio" },
   { value: "LOAN", label: "Préstamo" },
 ];
@@ -29,14 +28,14 @@ interface NewTransactionPanelProps {
 }
 
 export function NewTransactionPanel({ members, todayTransactions }: NewTransactionPanelProps) {
-  const [mode, setMode] = useState<Mode>("DEPOSIT");
+  const [mode, setMode] = useState<Mode>("TRANSACTION");
   const [selectedMemberId, setSelectedMemberId] = useState<string>("");
 
   return (
     <>
       {/* Selector de modo */}
       <div className="px-4 pt-4">
-        <div className="grid grid-cols-4 gap-1 rounded-lg border border-border bg-muted p-1">
+        <div className="grid grid-cols-3 gap-1 rounded-lg border border-border bg-muted p-1">
           {MODES.map(({ value, label }) => (
             <button
               key={value}
@@ -64,7 +63,6 @@ export function NewTransactionPanel({ members, todayTransactions }: NewTransacti
           onSubmit={createTransaction}
           submitLabel="Registrar movimiento"
           onMemberChange={setSelectedMemberId}
-          defaultValues={{ type: mode }}
         />
       )}
 

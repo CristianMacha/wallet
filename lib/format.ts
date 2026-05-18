@@ -1,3 +1,7 @@
+export function formatMemberName(name: string, alias: string | null | undefined): string {
+  return alias ? `${name} - ${alias}` : name;
+}
+
 export function formatPEN(amount: number): string {
   return new Intl.NumberFormat("es-PE", {
     style: "currency",

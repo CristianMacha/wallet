@@ -92,7 +92,7 @@ export function LoanForm({ members, onMemberChange }: LoanFormProps) {
           <option value="">Selecciona una cuenta</option>
           <option value="_self">Mi cuenta personal</option>
           {members.map((m) => (
-            <option key={m.id} value={m.id}>{m.alias || m.name}</option>
+            <option key={m.id} value={m.id}>{m.alias ? `${m.name} - ${m.alias}` : m.name}</option>
           ))}
         </select>
       </div>
@@ -131,7 +131,7 @@ export function LoanForm({ members, onMemberChange }: LoanFormProps) {
           >
             <option value="">Selecciona un miembro</option>
             {availableBorrowers.map((m) => (
-              <option key={m.id} value={m.id}>{m.alias || m.name}</option>
+              <option key={m.id} value={m.id}>{m.alias ? `${m.name} - ${m.alias}` : m.name}</option>
             ))}
           </select>
         </div>

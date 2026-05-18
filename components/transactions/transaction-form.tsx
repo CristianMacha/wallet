@@ -125,7 +125,7 @@ export function TransactionForm({
           <option value="_self">Mi cuenta personal</option>
           {members.map((m) => (
             <option key={m.id} value={m.id}>
-              {m.alias || m.name}
+              {m.alias ? `${m.name} - ${m.alias}` : m.name}
             </option>
           ))}
         </select>

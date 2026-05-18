@@ -4,6 +4,7 @@ import { getCurrentUserId } from "@/lib/session";
 import { getMemberBalance } from "@/lib/balance";
 import { getTransactions } from "@/lib/transactions";
 import { PageHeader } from "@/components/layout/page-header";
+import { formatMemberName } from "@/lib/format";
 import { EditMemberForm } from "@/components/members/edit-member-form";
 import { MemberLinkPanel } from "@/components/members/member-link-panel";
 import { ToggleActiveButton } from "@/components/members/toggle-active-button";
@@ -54,7 +55,7 @@ export default async function MemberProfilePage({
 
   return (
     <>
-      <PageHeader title={member.name} backHref="/miembros" />
+      <PageHeader title={formatMemberName(member.name, member.alias)} backHref="/miembros" />
       <div className="px-4 py-4 space-y-6">
         <section className="space-y-2">
           <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Saldo actual</h2>

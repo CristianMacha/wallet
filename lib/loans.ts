@@ -52,7 +52,8 @@ export async function getAllLoans(userId: string): Promise<Loan[]> {
   const membersSnap = await userRef.collection("members").where("isActive", "==", true).get();
   const memberMap: Record<string, string> = {};
   membersSnap.docs.forEach((doc) => {
-    memberMap[doc.id] = (doc.data().alias as string) || (doc.data().name as string);
+    const md = doc.data();
+    memberMap[doc.id] = md.alias ? `${md.name} - ${md.alias}` : (md.name as string);
   });
 
   const snap = await userRef.collection("loans").orderBy("createdAt", "desc").get();

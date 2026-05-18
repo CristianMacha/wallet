@@ -97,7 +97,7 @@ export function TransactionFilters({ members = [], showMemberFilter = true }: Tr
             <option value="_self">Mi cuenta</option>
             {members.map((m) => (
               <option key={m.id} value={m.id}>
-                {m.alias || m.name}
+                {m.alias ? `${m.name} - ${m.alias}` : m.name}
               </option>
             ))}
           </select>
