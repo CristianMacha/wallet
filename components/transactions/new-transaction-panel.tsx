@@ -4,6 +4,7 @@ import { useState } from "react";
 import { TransactionForm } from "./transaction-form";
 import { CurrencyExchangeForm } from "./currency-exchange-form";
 import { LoanForm } from "./loan-form";
+import { TransferForm } from "./transfer-form";
 import { TodayTransactions } from "./today-transactions";
 import { createTransaction } from "@/actions/transaction-actions";
 import type { Transaction } from "@/lib/transactions";
@@ -14,10 +15,11 @@ interface Member {
   alias: string | null;
 }
 
-type Mode = "TRANSACTION" | "EXCHANGE" | "LOAN";
+type Mode = "TRANSACTION" | "EXCHANGE" | "LOAN" | "TRANSFER";
 
 const MODES: { value: Mode; label: string }[] = [
   { value: "TRANSACTION", label: "Movimiento" },
+  { value: "TRANSFER", label: "Transferencia" },
   { value: "EXCHANGE", label: "Cambio" },
   { value: "LOAN", label: "Préstamo" },
 ];
@@ -35,7 +37,7 @@ export function NewTransactionPanel({ members, todayTransactions }: NewTransacti
     <>
       {/* Selector de modo */}
       <div className="px-4 pt-4">
-        <div className="grid grid-cols-3 gap-1 rounded-lg border border-border bg-muted p-1">
+        <div className="grid grid-cols-4 gap-1 rounded-lg border border-border bg-muted p-1">
           {MODES.map(({ value, label }) => (
             <button
               key={value}
@@ -57,6 +59,8 @@ export function NewTransactionPanel({ members, todayTransactions }: NewTransacti
         <CurrencyExchangeForm members={members} onMemberChange={setSelectedMemberId} />
       ) : mode === "LOAN" ? (
         <LoanForm members={members} onMemberChange={setSelectedMemberId} />
+      ) : mode === "TRANSFER" ? (
+        <TransferForm members={members} onMemberChange={setSelectedMemberId} />
       ) : (
         <TransactionForm
           members={members}

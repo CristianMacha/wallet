@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { regenerateMemberToken } from "@/actions/member-actions";
 import { Copy, RefreshCw, Check } from "lucide-react";
@@ -15,8 +15,12 @@ export function MemberLinkPanel({ memberId, accessToken: initialToken }: MemberL
   const [copied, setCopied] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [origin, setOrigin] = useState("");
 
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
+
   const link = `${origin}/m/${token}`;
 
   async function handleCopy() {

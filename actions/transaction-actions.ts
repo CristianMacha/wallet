@@ -113,6 +113,79 @@ export async function createCurrencyExchange(data: {
   return { ok: true };
 }
 
+export async function createTransfer(data: {
+  fromId: string;
+  toId: string;
+  amount: number;
+  currency: "PEN" | "USD";
+  description?: string;
+  date: string;
+}) {
+  const userId = await getCurrentUserId();
+  if (!data.fromId) return { error: "Selecciona la cuenta origen" };
+  if (!data.toId) return { error: "Selecciona la cuenta destino" };
+  if (data.fromId === data.toId) return { error: "El origen y destino no pueden ser iguales" };
+  if (!data.amount || data.amount <= 0) return { error: "El monto debe ser mayor a 0" };
+  if (!data.date) return { error: "La fecha es obligatoria" };
+
+  const userRef = adminDb.collection("users").doc(userId);
+
+  // Obtener nombres para la descripción
+  async function getName(id: string): Promise<string> {
+    if (id === "_self") {
+      const u = await userRef.get();
+      return (u.data()?.name as string) ?? "Mi cuenta";
+    }
+    const m = await userRef.collection("members").doc(id).get();
+    const md = m.data();
+    return md?.alias ? `${md.name} - ${md.alias}` : (md?.name as string) ?? "";
+  }
+
+  const [fromName, toName] = await Promise.all([getName(data.fromId), getName(data.toId)]);
+  const description = data.description?.trim()
+    ? data.description.trim()
+    : `Transferencia: ${fromName} → ${toName}`;
+
+  const dateTs = Timestamp.fromDate(new Date(data.date));
+  const batch = adminDb.batch();
+
+  const fromCol = data.fromId === "_self"
+    ? userRef.collection("transactions")
+    : userRef.collection("members").doc(data.fromId).collection("transactions");
+
+  const toCol = data.toId === "_self"
+    ? userRef.collection("transactions")
+    : userRef.collection("members").doc(data.toId).collection("transactions");
+
+  batch.set(fromCol.doc(), {
+    type: "EXPENSE",
+    amount: data.amount,
+    currency: data.currency,
+    description,
+    date: dateTs,
+    createdAt: FieldValue.serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp(),
+  });
+
+  batch.set(toCol.doc(), {
+    type: "DEPOSIT",
+    amount: data.amount,
+    currency: data.currency,
+    description,
+    date: dateTs,
+    createdAt: FieldValue.serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp(),
+  });
+
+  await batch.commit();
+
+  revalidatePath("/dashboard");
+  revalidatePath("/historial");
+  if (data.fromId !== "_self") revalidatePath(`/miembros/${data.fromId}`);
+  if (data.toId !== "_self") revalidatePath(`/miembros/${data.toId}`);
+  return { ok: true };
+}
+
 export async function deleteTransaction(memberId: string, transactionId: string) {
   const userId = await getCurrentUserId();
   const userRef = adminDb.collection("users").doc(userId);
