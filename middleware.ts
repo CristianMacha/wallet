@@ -21,5 +21,6 @@ export const config = {
     "/reportes/:path*",
     "/prestamos/:path*",
     "/mi-cuenta/:path*",
+    "/deudas/:path*",
   ],
 };

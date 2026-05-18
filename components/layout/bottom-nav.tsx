@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, Clock, Users, BarChart2, PlusCircle, LogOut, Sun, Moon, MoreHorizontal, X, Landmark } from "lucide-react";
+import { Home, Clock, Users, BarChart2, PlusCircle, LogOut, Sun, Moon, MoreHorizontal, X, Landmark, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/layout/theme-provider";
 import { useState } from "react";
@@ -55,6 +55,14 @@ export function BottomNav() {
             >
               <Landmark className="h-4 w-4 text-muted-foreground" />
               <span>Préstamos</span>
+            </Link>
+            <Link
+              href="/deudas"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 w-full px-4 py-3.5 text-sm text-left hover:bg-muted/50 transition-colors border-b border-border"
+            >
+              <CreditCard className="h-4 w-4 text-muted-foreground" />
+              <span>Deudas</span>
             </Link>
             <Link
               href="/reportes"
