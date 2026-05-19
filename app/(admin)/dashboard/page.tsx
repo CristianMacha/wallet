@@ -4,10 +4,12 @@ import { getAllMembersBalances, getUserBalance, sumBalances } from "@/lib/balanc
 import { getLatestExchangeRate } from "@/lib/exchange-rate";
 import { getPendingLoansByMember } from "@/lib/loans";
 import { getPendingDebts } from "@/lib/debts";
+import { getWeeklyActivity } from "@/lib/transactions";
 import { PageHeader } from "@/components/layout/page-header";
 import { MemberBalanceCard } from "@/components/dashboard/member-balance-card";
 import { TotalsSummary } from "@/components/dashboard/totals-summary";
 import { ExchangeRateBanner } from "@/components/dashboard/exchange-rate-banner";
+import { WeeklyActivityChart } from "@/components/dashboard/weekly-activity-chart";
 import { BalanceDisplay } from "@/components/shared/balance-display";
 import { formatCurrency } from "@/lib/format";
 import { Button } from "@/components/ui/button";
@@ -32,19 +34,25 @@ async function getActiveMembers(userId: string) {
 export default async function DashboardPage() {
   const userId = await getCurrentUserId();
 
-  const [members, exchangeRate, pendingLoansByMember, memberBalances, userBalance, pendingDebts] = await Promise.all([
+  const [members, exchangeRate, pendingLoansByMember, memberBalances, userBalance, pendingDebts, weeklyActivity] = await Promise.all([
     getActiveMembers(userId),
     getLatestExchangeRate(userId),
     getPendingLoansByMember(userId),
     getAllMembersBalances(userId),
     getUserBalance(userId),
     getPendingDebts(userId),
+    getWeeklyActivity(userId),
   ]);
 
   const total = sumBalances([
     userBalance,
     ...members.map((m) => memberBalances[m.id] ?? { PEN: 0, USD: 0 }),
   ]);
+
+  const negativeCount = members.filter((m) => {
+    const b = memberBalances[m.id] ?? { PEN: 0, USD: 0 };
+    return b.PEN < 0 || b.USD < 0;
+  }).length;
 
   return (
     <>
@@ -66,7 +74,8 @@ export default async function DashboardPage() {
           date={exchangeRate?.date ?? null}
           isToday={exchangeRate?.isToday ?? false}
         />
-        <TotalsSummary total={total} />
+        <TotalsSummary total={total} memberCount={members.length} negativeCount={negativeCount} />
+        <WeeklyActivityChart data={weeklyActivity} />
 
         {/* Mi cuenta */}
         <section className="space-y-2">

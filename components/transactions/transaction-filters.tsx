@@ -3,6 +3,7 @@
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useCallback, useTransition, useEffect, useRef, useState } from "react";
 import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 interface Member {
   id: string;
@@ -55,12 +56,12 @@ export function TransactionFilters({ members = [], showMemberFilter = true }: Tr
       {/* Búsqueda por descripción */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-        <input
+        <Input
           type="search"
           placeholder="Buscar por descripción..."
           value={searchValue}
           onChange={(e) => handleSearch(e.target.value)}
-          className="w-full rounded-md border border-input bg-background pl-9 pr-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          className="pl-9"
         />
       </div>
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
@@ -106,24 +107,20 @@ export function TransactionFilters({ members = [], showMemberFilter = true }: Tr
 
       {/* Rango de fechas */}
       <div className="flex gap-2">
-        <div className="flex-1">
-          <input
-            type="date"
-            value={searchParams.get("from") ?? ""}
-            onChange={(e) => updateParam("from", e.target.value)}
-            className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
-            placeholder="Desde"
-          />
-        </div>
-        <div className="flex-1">
-          <input
-            type="date"
-            value={searchParams.get("to") ?? ""}
-            onChange={(e) => updateParam("to", e.target.value)}
-            className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
-            placeholder="Hasta"
-          />
-        </div>
+        <Input
+          type="date"
+          value={searchParams.get("from") ?? ""}
+          onChange={(e) => updateParam("from", e.target.value)}
+          className="flex-1"
+          placeholder="Desde"
+        />
+        <Input
+          type="date"
+          value={searchParams.get("to") ?? ""}
+          onChange={(e) => updateParam("to", e.target.value)}
+          className="flex-1"
+          placeholder="Hasta"
+        />
       </div>
     </div>
   );

@@ -6,6 +6,9 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { memberSchema, type MemberFormData } from "@/lib/validations/member";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 interface MemberFormProps {
   defaultValues?: MemberFormData;
@@ -39,14 +42,14 @@ export function MemberForm({ defaultValues, onSubmit, submitLabel }: MemberFormP
   return (
     <form onSubmit={handleSubmit(submit)} className="space-y-5 px-4 py-6">
       <div className="space-y-1.5">
-        <label htmlFor="name" className="text-sm font-medium">
+        <Label htmlFor="name">
           Nombre <span className="text-destructive">*</span>
-        </label>
-        <input
+        </Label>
+        <Input
           id="name"
           {...register("name")}
           placeholder="Ej: María"
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-invalid={!!errors.name}
         />
         {errors.name && (
           <p className="text-xs text-destructive">{errors.name.message}</p>
@@ -54,27 +57,25 @@ export function MemberForm({ defaultValues, onSubmit, submitLabel }: MemberFormP
       </div>
 
       <div className="space-y-1.5">
-        <label htmlFor="alias" className="text-sm font-medium">
+        <Label htmlFor="alias">
           Alias <span className="text-muted-foreground">(opcional)</span>
-        </label>
-        <input
+        </Label>
+        <Input
           id="alias"
           {...register("alias")}
           placeholder="Ej: Mari"
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
 
       <div className="space-y-1.5">
-        <label htmlFor="note" className="text-sm font-medium">
+        <Label htmlFor="note">
           Nota <span className="text-muted-foreground">(opcional)</span>
-        </label>
-        <textarea
+        </Label>
+        <Textarea
           id="note"
           {...register("note")}
           rows={2}
           placeholder="Ej: Deuda pendiente de enero, acuerdo especial..."
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
         />
       </div>
 

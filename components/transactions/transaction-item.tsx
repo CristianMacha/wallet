@@ -62,13 +62,13 @@ export function TransactionItem({
         </div>
       </div>
 
-      <div className="flex items-center gap-1 shrink-0">
+      <div className="flex items-center gap-0.5 shrink-0">
         <Link
           href={`/transaction/${id}/edit?memberId=${memberId ?? "_self"}`}
-          className="p-1.5 text-muted-foreground hover:text-foreground transition-colors"
+          className="p-2.5 text-muted-foreground hover:text-foreground transition-colors"
           aria-label="Editar"
         >
-          <Pencil className="h-3.5 w-3.5" />
+          <Pencil className="h-4 w-4" />
         </Link>
         <DeleteTransactionButton memberId={memberId ?? "_self"} transactionId={id} />
       </div>

@@ -6,6 +6,8 @@ import { TransactionItem } from "@/components/transactions/transaction-item";
 import { TransactionFilters } from "@/components/transactions/transaction-filters";
 import { PaginationControls } from "@/components/shared/pagination-controls";
 import { Suspense } from "react";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
 const PAGE_SIZE = 30;
 
@@ -78,6 +80,19 @@ export default async function HistorialPage({
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const transactions = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
+  // Agrupar por fecha
+  const groups: { label: string; txs: typeof transactions }[] = [];
+  for (const tx of transactions) {
+    const key = format(tx.date, "yyyy-MM-dd");
+    const label = format(tx.date, "EEEE d 'de' MMMM", { locale: es });
+    const last = groups[groups.length - 1];
+    if (last && format(last.txs[0].date, "yyyy-MM-dd") === key) {
+      last.txs.push(tx);
+    } else {
+      groups.push({ label: label.charAt(0).toUpperCase() + label.slice(1), txs: [tx] });
+    }
+  }
+
   return (
     <>
       <PageHeader title="Historial" />
@@ -96,13 +111,20 @@ export default async function HistorialPage({
               {filtered.length} movimiento{filtered.length !== 1 ? "s" : ""}
               {totalPages > 1 && ` · página ${page} de ${totalPages}`}
             </p>
-            <div className="rounded-lg border border-border bg-card divide-y divide-border overflow-hidden">
-              {transactions.map((tx) => (
-                <TransactionItem
-                  key={`${tx.memberId}-${tx.id}`}
-                  {...tx}
-                  showMember
-                />
+            <div className="space-y-3">
+              {groups.map(({ label, txs }) => (
+                <div key={label}>
+                  <p className="text-xs font-medium text-muted-foreground px-1 pb-1.5">{label}</p>
+                  <div className="rounded-lg border border-border bg-card divide-y divide-border overflow-hidden">
+                    {txs.map((tx) => (
+                      <TransactionItem
+                        key={`${tx.memberId}-${tx.id}`}
+                        {...tx}
+                        showMember
+                      />
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
             {totalPages > 1 && (

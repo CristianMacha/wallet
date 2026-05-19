@@ -79,19 +79,19 @@ export default async function MemberProfilePage({
         )}
 
         <section className="space-y-2">
+          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Enlace de acceso</h2>
+          <div className="rounded-lg border border-border bg-card p-4">
+            <MemberLinkPanel memberId={member.id} accessToken={member.accessToken} />
+          </div>
+        </section>
+
+        <section className="space-y-2">
           <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Editar datos</h2>
           <div className="rounded-lg border border-border bg-card overflow-hidden">
             <EditMemberForm
               memberId={member.id}
               defaultValues={{ name: member.name, alias: member.alias ?? undefined, note: member.note ?? undefined }}
             />
-          </div>
-        </section>
-
-        <section className="space-y-2">
-          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Enlace de acceso</h2>
-          <div className="rounded-lg border border-border bg-card p-4">
-            <MemberLinkPanel memberId={member.id} accessToken={member.accessToken} />
           </div>
         </section>
 

@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { createDebt } from "@/actions/debt-actions";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { formatMemberName } from "@/lib/format";
 
@@ -52,7 +54,7 @@ export function DebtForm({ members }: { members: Member[] }) {
     <form onSubmit={handleSubmit} className="space-y-5 px-4 py-6">
       {/* Deudor */}
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">Quién debe</label>
+        <Label>Quién debe</Label>
         <div className="grid grid-cols-2 gap-1.5 rounded-lg border border-border bg-muted p-1">
           {(["SELF", "MEMBER"] as const).map((t) => (
             <button
@@ -85,23 +87,22 @@ export function DebtForm({ members }: { members: Member[] }) {
 
       {/* Acreedor */}
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">
+        <Label>
           A quién le debe <span className="text-destructive">*</span>
-        </label>
-        <input
+        </Label>
+        <Input
           type="text"
           value={creditorName}
           onChange={(e) => setCreditorName(e.target.value)}
           placeholder="Ej: Tienda Hiraoka, Juan Pérez"
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
 
       {/* Monto total y moneda */}
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">
+        <Label>
           Monto total de la deuda <span className="text-destructive">*</span>
-        </label>
+        </Label>
         <div className="flex gap-2">
           <div className="grid grid-cols-2 gap-1 rounded-lg border border-border bg-muted p-1 shrink-0">
             {(["PEN", "USD"] as const).map((c) => (
@@ -119,42 +120,40 @@ export function DebtForm({ members }: { members: Member[] }) {
               </button>
             ))}
           </div>
-          <input
+          <Input
             type="number"
             step="0.01"
             min="0.01"
             value={totalAmount}
             onChange={(e) => setTotalAmount(e.target.value)}
             placeholder="0.00"
-            className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            className="flex-1"
           />
         </div>
       </div>
 
       {/* Descripción */}
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">
+        <Label>
           Descripción <span className="text-muted-foreground">(opcional)</span>
-        </label>
-        <input
+        </Label>
+        <Input
           type="text"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Ej: TV Samsung 55 pulgadas"
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
 
       {/* Fecha */}
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">
+        <Label>
           Fecha <span className="text-destructive">*</span>
-        </label>
-        <input
+        </Label>
+        <Input
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
 

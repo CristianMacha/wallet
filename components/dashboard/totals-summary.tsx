@@ -3,9 +3,11 @@ import type { Balance } from "@/lib/balance";
 
 interface TotalsSummaryProps {
   total: Balance;
+  memberCount: number;
+  negativeCount: number;
 }
 
-export function TotalsSummary({ total }: TotalsSummaryProps) {
+export function TotalsSummary({ total, memberCount, negativeCount }: TotalsSummaryProps) {
   return (
     <div className="rounded-lg border border-border bg-card px-4 py-3 space-y-1">
       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
@@ -22,6 +24,12 @@ export function TotalsSummary({ total }: TotalsSummaryProps) {
           <p className="text-xs text-muted-foreground">Dólares</p>
         </div>
       </div>
+      <p className="text-xs text-muted-foreground pt-0.5">
+        {memberCount} miembro{memberCount !== 1 ? "s" : ""}
+        {negativeCount > 0 && (
+          <span className="text-destructive"> · {negativeCount} con saldo negativo</span>
+        )}
+      </p>
     </div>
   );
 }

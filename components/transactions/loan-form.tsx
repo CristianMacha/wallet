@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { createLoan } from "@/actions/loan-actions";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
 interface Member {
@@ -77,9 +79,9 @@ export function LoanForm({ members, onMemberChange }: LoanFormProps) {
     <form onSubmit={handleSubmit} className="space-y-5 px-4 py-6">
       {/* Quien presta */}
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">
+        <Label>
           Quien presta <span className="text-destructive">*</span>
-        </label>
+        </Label>
         <select
           value={lenderMemberId}
           onChange={(e) => {
@@ -99,7 +101,7 @@ export function LoanForm({ members, onMemberChange }: LoanFormProps) {
 
       {/* Tipo de receptor */}
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">Quien recibe</label>
+        <Label>Quien recibe</Label>
         <div className="grid grid-cols-2 gap-1.5 rounded-lg border border-border bg-muted p-1">
           {(["MEMBER", "EXTERNAL"] as const).map((t) => (
             <button
@@ -121,9 +123,9 @@ export function LoanForm({ members, onMemberChange }: LoanFormProps) {
       {/* Selector de receptor */}
       {borrowerType === "MEMBER" ? (
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">
+          <Label>
             Miembro receptor <span className="text-destructive">*</span>
-          </label>
+          </Label>
           <select
             value={borrowerMemberId}
             onChange={(e) => setBorrowerMemberId(e.target.value)}
@@ -137,24 +139,23 @@ export function LoanForm({ members, onMemberChange }: LoanFormProps) {
         </div>
       ) : (
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">
+          <Label>
             Nombre de la persona <span className="text-destructive">*</span>
-          </label>
-          <input
+          </Label>
+          <Input
             type="text"
             value={borrowerName}
             onChange={(e) => setBorrowerName(e.target.value)}
             placeholder="Ej: Juan Pérez"
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           />
         </div>
       )}
 
       {/* Monto y moneda */}
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">
+        <Label>
           Monto <span className="text-destructive">*</span>
-        </label>
+        </Label>
         <div className="flex gap-2">
           <div className="grid grid-cols-2 gap-1 rounded-lg border border-border bg-muted p-1 shrink-0">
             {(["PEN", "USD"] as const).map((c) => (
@@ -172,42 +173,40 @@ export function LoanForm({ members, onMemberChange }: LoanFormProps) {
               </button>
             ))}
           </div>
-          <input
+          <Input
             type="number"
             step="0.01"
             min="0.01"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             placeholder="0.00"
-            className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            className="flex-1"
           />
         </div>
       </div>
 
       {/* Descripción */}
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">
+        <Label>
           Descripción <span className="text-muted-foreground">(opcional)</span>
-        </label>
-        <input
+        </Label>
+        <Input
           type="text"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Ej: Para emergencia médica"
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
 
       {/* Fecha */}
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">
+        <Label>
           Fecha <span className="text-destructive">*</span>
-        </label>
-        <input
+        </Label>
+        <Input
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
 

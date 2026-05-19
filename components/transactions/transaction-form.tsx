@@ -6,6 +6,9 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { transactionSchema, type TransactionFormData } from "@/lib/validations/transaction";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
@@ -87,7 +90,7 @@ export function TransactionForm({
     <form onSubmit={handleSubmit(submit)} className="space-y-5 px-4 py-6">
       {/* Tipo */}
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">Tipo</label>
+        <Label>Tipo</Label>
         <div className="grid grid-cols-2 gap-2">
           {(["DEPOSIT", "EXPENSE"] as const).map((t) => (
             <label
@@ -109,9 +112,9 @@ export function TransactionForm({
 
       {/* Miembro */}
       <div className="space-y-1.5">
-        <label htmlFor="memberId" className="text-sm font-medium">
+        <Label htmlFor="memberId">
           Miembro <span className="text-destructive">*</span>
-        </label>
+        </Label>
         <select
           id="memberId"
           {...register("memberId")}
@@ -136,18 +139,19 @@ export function TransactionForm({
 
       {/* Monto y moneda */}
       <div className="space-y-1.5">
-        <label htmlFor="amount" className="text-sm font-medium">
+        <Label htmlFor="amount">
           Monto <span className="text-destructive">*</span>
-        </label>
+        </Label>
         <div className="flex gap-2">
-          <input
+          <Input
             id="amount"
             type="number"
             step="0.01"
             min="0.01"
             {...register("amount")}
             placeholder="0.00"
-            className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            className="flex-1"
+            aria-invalid={!!errors.amount}
           />
           <div className="flex rounded-md border border-input overflow-hidden">
             {(["PEN", "USD"] as const).map((c) => (
@@ -172,14 +176,14 @@ export function TransactionForm({
 
       {/* Fecha */}
       <div className="space-y-1.5">
-        <label htmlFor="date" className="text-sm font-medium">
+        <Label htmlFor="date">
           Fecha <span className="text-destructive">*</span>
-        </label>
-        <input
+        </Label>
+        <Input
           id="date"
           type="date"
           {...register("date")}
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-invalid={!!errors.date}
         />
         {errors.date && (
           <p className="text-xs text-destructive">{errors.date.message}</p>
@@ -188,20 +192,20 @@ export function TransactionForm({
 
       {/* Descripción */}
       <div className="space-y-1.5">
-        <label htmlFor="description" className="text-sm font-medium">
+        <Label htmlFor="description">
           Descripción{" "}
           {type === "EXPENSE" ? (
             <span className="text-destructive">*</span>
           ) : (
             <span className="text-muted-foreground">(opcional)</span>
           )}
-        </label>
-        <textarea
+        </Label>
+        <Textarea
           id="description"
           {...register("description")}
           rows={2}
           placeholder={type === "EXPENSE" ? "Ej: Pago de luz" : "Ej: Depósito mensual"}
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+          aria-invalid={!!errors.description}
         />
         {errors.description && (
           <p className="text-xs text-destructive">{errors.description.message}</p>

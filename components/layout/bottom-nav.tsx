@@ -48,44 +48,45 @@ export function BottomNav() {
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <Link
-              href="/prestamos"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-3 w-full px-4 py-3.5 text-sm text-left hover:bg-muted/50 transition-colors border-b border-border"
-            >
-              <Landmark className="h-4 w-4 text-muted-foreground" />
-              <span>Préstamos</span>
-            </Link>
-            <Link
-              href="/deudas"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-3 w-full px-4 py-3.5 text-sm text-left hover:bg-muted/50 transition-colors border-b border-border"
-            >
-              <CreditCard className="h-4 w-4 text-muted-foreground" />
-              <span>Deudas</span>
-            </Link>
-            <Link
-              href="/reportes"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-3 w-full px-4 py-3.5 text-sm text-left hover:bg-muted/50 transition-colors border-b border-border"
-            >
-              <BarChart2 className="h-4 w-4 text-muted-foreground" />
-              <span>Reportes</span>
-            </Link>
-            <button
-              onClick={() => { toggle(); setOpen(false); }}
-              className="flex items-center gap-3 w-full px-4 py-3.5 text-sm text-left hover:bg-muted/50 transition-colors border-b border-border"
-            >
-              {theme === "dark" ? <Sun className="h-4 w-4 text-muted-foreground" /> : <Moon className="h-4 w-4 text-muted-foreground" />}
-              <span>{theme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}</span>
-            </button>
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-3 w-full px-4 py-3.5 text-sm text-left text-destructive hover:bg-destructive/5 transition-colors"
-            >
-              <LogOut className="h-4 w-4" />
-              <span>Cerrar sesión</span>
-            </button>
+
+            {/* Grid de accesos rápidos */}
+            <div className="grid grid-cols-3 gap-px bg-border">
+              {[
+                { href: "/prestamos", icon: Landmark, label: "Préstamos" },
+                { href: "/deudas", icon: CreditCard, label: "Deudas" },
+                { href: "/reportes", icon: BarChart2, label: "Reportes" },
+              ].map(({ href, icon: Icon, label }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={() => setOpen(false)}
+                  className="flex flex-col items-center gap-2 bg-background px-3 py-5 hover:bg-muted transition-colors"
+                >
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-muted">
+                    <Icon className="h-5 w-5 text-foreground" />
+                  </div>
+                  <span className="text-xs font-medium">{label}</span>
+                </Link>
+              ))}
+            </div>
+
+            {/* Acciones secundarias */}
+            <div className="border-t border-border">
+              <button
+                onClick={() => { toggle(); setOpen(false); }}
+                className="flex items-center gap-3 w-full px-4 py-3.5 text-sm text-left hover:bg-muted/50 transition-colors border-b border-border"
+              >
+                {theme === "dark" ? <Sun className="h-4 w-4 text-muted-foreground" /> : <Moon className="h-4 w-4 text-muted-foreground" />}
+                <span>{theme === "dark" ? "Modo claro" : "Modo oscuro"}</span>
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-3 w-full px-4 py-3.5 text-sm text-left text-destructive hover:bg-destructive/5 transition-colors"
+              >
+                <LogOut className="h-4 w-4" />
+                <span>Cerrar sesión</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { createCurrencyExchange } from "@/actions/transaction-actions";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { ArrowLeftRight } from "lucide-react";
 import { toast } from "sonner";
 
@@ -89,9 +91,9 @@ export function CurrencyExchangeForm({ members, onMemberChange }: CurrencyExchan
     <form onSubmit={handleSubmit} className="space-y-5 px-4 py-6">
       {/* Miembro */}
       <div className="space-y-1.5">
-        <label htmlFor="ex-member" className="text-sm font-medium">
+        <Label htmlFor="ex-member">
           Miembro <span className="text-destructive">*</span>
-        </label>
+        </Label>
         <select
           id="ex-member"
           value={memberId}
@@ -113,12 +115,12 @@ export function CurrencyExchangeForm({ members, onMemberChange }: CurrencyExchan
 
       {/* Monto entregado */}
       <div className="space-y-1.5">
-        <label htmlFor="from-amount" className="text-sm font-medium">
+        <Label htmlFor="from-amount">
           {fromLabel} <span className="text-destructive">*</span>
-        </label>
+        </Label>
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-muted-foreground w-7 shrink-0">{fromPrefix}</span>
-          <input
+          <Input
             id="from-amount"
             type="number"
             step="0.01"
@@ -126,7 +128,7 @@ export function CurrencyExchangeForm({ members, onMemberChange }: CurrencyExchan
             value={fromValue}
             onChange={(e) => fromSet(e.target.value)}
             placeholder="0.00"
-            className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            className="flex-1"
           />
         </div>
       </div>
@@ -157,12 +159,12 @@ export function CurrencyExchangeForm({ members, onMemberChange }: CurrencyExchan
 
       {/* Monto recibido */}
       <div className="space-y-1.5">
-        <label htmlFor="to-amount" className="text-sm font-medium">
+        <Label htmlFor="to-amount">
           {toLabel} <span className="text-destructive">*</span>
-        </label>
+        </Label>
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-muted-foreground w-7 shrink-0">{toPrefix}</span>
-          <input
+          <Input
             id="to-amount"
             type="number"
             step="0.01"
@@ -170,22 +172,21 @@ export function CurrencyExchangeForm({ members, onMemberChange }: CurrencyExchan
             value={toValue}
             onChange={(e) => toSet(e.target.value)}
             placeholder="0.00"
-            className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            className="flex-1"
           />
         </div>
       </div>
 
       {/* Fecha */}
       <div className="space-y-1.5">
-        <label htmlFor="ex-date" className="text-sm font-medium">
+        <Label htmlFor="ex-date">
           Fecha <span className="text-destructive">*</span>
-        </label>
-        <input
+        </Label>
+        <Input
           id="ex-date"
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
 

@@ -112,3 +112,58 @@ export async function getUserTransactions(
   const docs = await queryTransactions(ref, filters);
   return docs.map((d) => docToTransaction(d, null, userName));
 }
+
+export interface WeeklyActivity {
+  week: string; // "Sem 1", "Sem 2", etc.
+  depositos: number;
+  gastos: number;
+}
+
+// Agrupa depósitos y gastos en PEN de los últimos 30 días por semana
+export async function getWeeklyActivity(userId: string): Promise<WeeklyActivity[]> {
+  const userRef = adminDb.collection("users").doc(userId);
+  const from = new Date();
+  from.setDate(from.getDate() - 29);
+  from.setHours(0, 0, 0, 0);
+
+  const fromTs = Timestamp.fromDate(from);
+
+  // Consultar todas las subcolecciones en paralelo
+  const [membersSnap, userDocs] = await Promise.all([
+    userRef.collection("members").where("isActive", "==", true).get(),
+    userRef.collection("transactions").where("date", ">=", fromTs).get(),
+  ]);
+
+  const memberDocs = await Promise.all(
+    membersSnap.docs.map((m) =>
+      userRef.collection("members").doc(m.id).collection("transactions")
+        .where("date", ">=", fromTs).get()
+    )
+  );
+
+  const allDocs = [
+    ...userDocs.docs,
+    ...memberDocs.flatMap((s) => s.docs),
+  ];
+
+  // Inicializar 4 semanas (sem 1 = más antigua, sem 4 = más reciente)
+  const weeks: WeeklyActivity[] = [
+    { week: "Sem 1", depositos: 0, gastos: 0 },
+    { week: "Sem 2", depositos: 0, gastos: 0 },
+    { week: "Sem 3", depositos: 0, gastos: 0 },
+    { week: "Sem 4", depositos: 0, gastos: 0 },
+  ];
+
+  for (const doc of allDocs) {
+    const data = doc.data();
+    if (data.currency !== "PEN") continue;
+    const date = (data.date as Timestamp).toDate();
+    const daysDiff = Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24));
+    const weekIdx = Math.min(3, Math.floor(daysDiff / 7));
+    const slot = weeks[3 - weekIdx]; // invertir: semana más reciente = índice 3
+    if (data.type === "DEPOSIT") slot.depositos += data.amount as number;
+    else slot.gastos += data.amount as number;
+  }
+
+  return weeks;
+}

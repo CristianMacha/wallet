@@ -80,16 +80,21 @@ export function ExchangeRateBanner({ rate: initialRate, date, isToday }: Exchang
           <div>
             {rate ? (
               <>
-                <p className="text-xs text-muted-foreground">
-                  Tipo de cambio{" "}
-                  {!isToday && date && (
-                    <span className="italic">
-                      (último: {format(date, "d MMM", { locale: es })})
+                <div className="flex items-center gap-2">
+                  <p className="text-xs text-muted-foreground">Tipo de cambio</p>
+                  {!isToday && (
+                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                      Desactualizado
                     </span>
                   )}
-                </p>
+                </div>
                 <p className="text-sm font-medium">
                   S/. {rate.toFixed(2)} por $1
+                  {!isToday && date && (
+                    <span className="text-xs text-muted-foreground font-normal ml-1">
+                      ({format(date, "d MMM", { locale: es })})
+                    </span>
+                  )}
                 </p>
               </>
             ) : (
@@ -100,7 +105,7 @@ export function ExchangeRateBanner({ rate: initialRate, date, isToday }: Exchang
           </div>
           <button
             onClick={() => setEditing(true)}
-            className="p-1.5 text-muted-foreground hover:text-foreground transition-colors"
+            className="p-2 text-muted-foreground hover:text-foreground transition-colors"
             aria-label="Editar tipo de cambio"
           >
             <Pencil className="h-3.5 w-3.5" />

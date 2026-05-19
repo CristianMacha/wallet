@@ -50,10 +50,10 @@ export function DeleteTransactionButton({ memberId, transactionId }: DeleteTrans
   return (
     <button
       onClick={() => setConfirming(true)}
-      className="p-1.5 text-muted-foreground hover:text-destructive transition-colors"
+      className="p-2.5 text-muted-foreground hover:text-destructive transition-colors"
       aria-label="Eliminar"
     >
-      <Trash2 className="h-3.5 w-3.5" />
+      <Trash2 className="h-4 w-4" />
     </button>
   );
 }
